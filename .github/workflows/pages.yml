@@ -1,0 +1,47 @@
+name: Publish calendars and comparison
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/configure-pages@v5
+      - name: Build applications
+        run: |
+          npm ci --prefix react
+          npm ci --prefix vue
+          npm ci --prefix angular
+          npm run build --prefix react -- --base=/${{ github.event.repository.name }}/react/
+          npm run build --prefix vue -- --base=/${{ github.event.repository.name }}/vue/
+          npm run build --prefix angular -- --base-href=/${{ github.event.repository.name }}/angular/
+          npm run build --prefix comparison
+      - name: Assemble site
+        run: |
+          mkdir -p _site/react _site/vue _site/angular _site/comparison
+          cp -R react/dist/. _site/react/
+          cp -R vue/dist/. _site/vue/
+          cp -R angular/dist/calendar/browser/. _site/angular/
+          cp -R comparison/dist/. _site/comparison/
+          printf '%s' '<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=./comparison/"><title>Framework comparison</title><a href="./comparison/">Open comparison</a></html>' > _site/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@v4

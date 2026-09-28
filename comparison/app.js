@@ -12,7 +12,8 @@ for (const m of data.metrics) {
   const heading = document.createElement('h3'); heading.textContent = names[m.id];
   const version = document.createElement('span'); version.textContent = `v${m.version}`; heading.append(version);
   const description = document.createElement('p'); description.textContent = tools[m.id];
-  card.append(heading,description); $('#overview').append(card);
+  const link = document.createElement('a'); link.href = `../${m.id}/`; link.target = '_blank'; link.rel = 'noopener'; link.className = 'open-app'; link.textContent = `Open ${names[m.id]} calendar ↗`; link.setAttribute('aria-label', `Open ${names[m.id]} calendar in a new tab`);
+  card.append(heading,description,link); $('#overview').append(card);
 }
 for (const c of data.concepts) {
   const option = document.createElement('option'); option.value = c.id; option.textContent = c.title; $('#concept-select').append(option);

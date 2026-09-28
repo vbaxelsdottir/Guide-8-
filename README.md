@@ -7,6 +7,14 @@ This school project compares React, Vue and Angular by implementing the same Chr
 - [GitHub repository](https://github.com/vbaxelsdottir/Guide-8-)
 - [Live comparison website](https://vbaxelsdottir.github.io/Guide-8-/comparison/)
 
+## Live calendars
+
+- [React calendar](https://vbaxelsdottir.github.io/Guide-8-/react/)
+- [Vue calendar](https://vbaxelsdottir.github.io/Guide-8-/vue/)
+- [Angular calendar](https://vbaxelsdottir.github.io/Guide-8-/angular/)
+
+These production builds use the real date. Before December, doors are locked and movie editing is available. Because they share an origin and storage keys, saved movie lists and opened history can carry between implementations. Use separate browser profiles for isolated tests. GitHub Actions builds and deploys all four parts on pushes to main.
+
 ## Repository structure
 
 ```text
