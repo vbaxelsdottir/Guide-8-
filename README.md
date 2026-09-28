@@ -55,3 +55,4 @@ npm run dev
 ```
 
 Open http://127.0.0.1:4200/. Run `npm run build` inside `angular` to create a production build. See [the Angular README](angular/README.md) for component and signal explanations. `angular/src/date.ts` line 3 selects `'december'`, `'before-december'`, or `null` (real date); line 4 sets the December day, currently 10. Production always uses the real date. React and Vue remain unchanged.
+# Guide-8-
