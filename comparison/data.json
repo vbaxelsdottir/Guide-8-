@@ -1,0 +1,383 @@
+{
+  "concepts": [
+    {
+      "id": "state",
+      "title": "State & reactivity",
+      "summary": "The same information, held in three different reactive APIs.",
+      "examples": {
+        "react": {
+          "file": "react/src/App.tsx",
+          "start": 23,
+          "end": 27,
+          "code": "  const [openDay, setOpenDay] = useState<number | null>(null);\n  const [openedDays, setOpenedDays] = useState<number[]>(() => readOpenedDays(year));\n  const [movies, setMovies] = useState(() => readMovies(year));\n  const [editing, setEditing] = useState(false);\n  const [movieMessage, setMovieMessage] = useState('');",
+          "explanation": "useState returns a value and its setter. The parent owns the open door, history, movie list and editor state."
+        },
+        "vue": {
+          "file": "vue/src/App.vue",
+          "start": 15,
+          "end": 19,
+          "code": "const openDay = ref<number | null>(null);\nconst openedDays = ref(readOpenedDays(year.value));\nconst movies = ref(readMovies(year.value));\nconst editing = ref(false);\nconst movieMessage = ref('');",
+          "explanation": "ref holds reactive state. Script code reads and writes .value; Vue templates unwrap it automatically."
+        },
+        "angular": {
+          "file": "angular/src/app.ts",
+          "start": 19,
+          "end": 23,
+          "code": "  openDay = signal<number | null>(null);\n  openedDays = signal(readOpenedDays(this.year()));\n  movies = signal(readMovies(this.year()));\n  editing = signal(false);\n  movieMessage = signal('');",
+          "explanation": "signal holds each value. Read it with parentheses and change it with .set() or .update()."
+        }
+      }
+    },
+    {
+      "id": "lists",
+      "title": "Rendering 24 doors",
+      "summary": "One movie array becomes 24 reusable door components.",
+      "examples": {
+        "react": {
+          "file": "react/src/components/Calendar.tsx",
+          "start": 6,
+          "end": 11,
+          "code": "export function Calendar({ movies, availableDay, today, openedDays, openDay, onToggle }: Props) {\n  return <div className=\"calendar-grid\">{movies.map(movie => (\n    <CalendarDoor key={movie.day} movie={movie} locked={movie.day > availableDay}\n      opened={openedDays.includes(movie.day)} isOpen={openDay === movie.day}\n      isToday={today === movie.day} onToggle={onToggle}/>\n  ))}</div>;",
+          "explanation": "map() is ordinary JavaScript. It returns a CalendarDoor for each movie; key uses the stable day number."
+        },
+        "vue": {
+          "file": "vue/src/components/Calendar.vue",
+          "start": 9,
+          "end": 14,
+          "code": "<template>\n  <div class=\"calendar-grid\">\n    <CalendarDoor v-for=\"movie in movies\" :key=\"movie.day\" :movie=\"movie\"\n      :locked=\"movie.day > availableDay\" :opened=\"openedDays.includes(movie.day)\"\n      :is-open=\"openDay === movie.day\" :is-today=\"today === movie.day\" @toggle=\"emit('toggle', $event)\"/>\n  </div>",
+          "explanation": "v-for repeats the component. :key identifies each day; colon bindings pass data into props."
+        },
+        "angular": {
+          "file": "angular/src/components/calendar.ts",
+          "start": 7,
+          "end": 13,
+          "code": "  template: `<div class=\"calendar-grid\">\n    @for (movie of movies(); track movie.day) {\n      <app-calendar-door [movie]=\"movie\" [locked]=\"movie.day > availableDay()\"\n        [opened]=\"openedDays().includes(movie.day)\" [isOpen]=\"openDay() === movie.day\"\n        [isToday]=\"today() === movie.day\" (toggle)=\"toggle.emit($event)\"/>\n    }\n  </div>`,",
+          "explanation": "@for repeats the component and track movie.day identifies it. Square brackets bind the child inputs."
+        }
+      }
+    },
+    {
+      "id": "conditions",
+      "title": "Conditional rendering",
+      "summary": "The movie title enters the rendered card only when that door is open.",
+      "examples": {
+        "react": {
+          "file": "react/src/components/CalendarDoor.tsx",
+          "start": 26,
+          "end": 28,
+          "code": "        <span className=\"door-face door-back\" aria-hidden={!isOpen}>\n          {isOpen && <><span className=\"door-top\">DECEMBER {movie.day}</span><span className=\"movie-star\" aria-hidden=\"true\">\u2726</span><span className=\"movie-title\">{movie.title}</span><span className=\"door-status\">Enjoy your movie night</span></>}\n        </span>",
+          "explanation": "The JSX expression uses JavaScript &&. When isOpen is false, the back-face content is not rendered."
+        },
+        "vue": {
+          "file": "vue/src/components/CalendarDoor.vue",
+          "start": 22,
+          "end": 28,
+          "code": "      <span class=\"door-face door-back\" :aria-hidden=\"!isOpen\">\n        <template v-if=\"isOpen\">\n          <span class=\"door-top\">DECEMBER {{ movie.day }}</span>\n          <span class=\"movie-star\" aria-hidden=\"true\">\u2726</span>\n          <span class=\"movie-title\">{{ movie.title }}</span>\n          <span class=\"door-status\">Enjoy your movie night</span>\n        </template>",
+          "explanation": "v-if includes the back-face content only when isOpen is true. The template wrapper adds no extra element."
+        },
+        "angular": {
+          "file": "angular/src/components/calendar-door.ts",
+          "start": 17,
+          "end": 21,
+          "code": "        <span class=\"door-face door-back\" [attr.aria-hidden]=\"!isOpen()\">\n          @if (isOpen()) {\n            <span class=\"door-top\">DECEMBER {{ movie().day }}</span><span class=\"movie-star\" aria-hidden=\"true\">\u2726</span>\n            <span class=\"movie-title\">{{ movie().title }}</span><span class=\"door-status\">Enjoy your movie night</span>\n          }",
+          "explanation": "@if includes the movie content when the isOpen input signal is true. The surrounding back face stays in place."
+        }
+      }
+    },
+    {
+      "id": "events",
+      "title": "Click events",
+      "summary": "Each door tells its parent which day was clicked.",
+      "examples": {
+        "react": {
+          "file": "react/src/components/CalendarDoor.tsx",
+          "start": 15,
+          "end": 18,
+          "code": "    <button className={`door tone-${movie.day % 4}${isOpen ? ' is-open' : ''}${isToday ? ' is-today' : ''}`}\n      type=\"button\" disabled={locked} aria-pressed={isOpen}\n      aria-label={`December ${movie.day}, ${state}${isOpen ? `: ${movie.title}. Click to close` : ''}`}\n      onClick={() => onToggle(movie.day)}>",
+          "explanation": "onClick calls the onToggle callback prop with movie.day. The parent changes the state."
+        },
+        "vue": {
+          "file": "vue/src/components/CalendarDoor.vue",
+          "start": 11,
+          "end": 14,
+          "code": "  <button class=\"door\" :class=\"[`tone-${movie.day % 4}`, { 'is-open': isOpen, 'is-today': isToday }]\"\n    type=\"button\" :disabled=\"locked\" :aria-pressed=\"isOpen\"\n    :aria-label=\"`December ${movie.day}, ${state}${isOpen ? `: ${movie.title}. Click to close` : ''}`\"\n    @click=\"emit('toggle', movie.day)\">",
+          "explanation": "@click emits a toggle event containing the day. Calendar forwards this event to App."
+        },
+        "angular": {
+          "file": "angular/src/components/calendar-door.ts",
+          "start": 8,
+          "end": 9,
+          "code": "    <button [class]=\"'door tone-' + movie().day % 4\" [class.is-open]=\"isOpen()\" [class.is-today]=\"isToday()\"\n      type=\"button\" [disabled]=\"locked()\" [attr.aria-pressed]=\"isOpen()\" [attr.aria-label]=\"label()\" (click)=\"toggle.emit(movie().day)\">",
+          "explanation": "(click) emits the day through a typed output. Calendar forwards it to the application component."
+        }
+      }
+    },
+    {
+      "id": "components",
+      "title": "Component structure",
+      "summary": "Each app separates the calendar, door, countdown and editor.",
+      "examples": {
+        "react": {
+          "file": "react/src/components/Countdown.tsx",
+          "start": 1,
+          "end": 8,
+          "code": "import { daysUntilChristmas } from '../date';\n\nexport function Countdown({ date }: { date: Date }) {\n  const days = daysUntilChristmas(date);\n  return <div className=\"countdown\"><span aria-hidden=\"true\">\u2727</span>{days === 0\n    ? <span>Merry Christmas!</span>\n    : <span><strong>{days}</strong> {days === 1 ? 'day' : 'days'} until Christmas</span>}</div>;\n}",
+          "explanation": "A typed function receives a date prop and returns JSX. This entire file is the small Countdown component."
+        },
+        "vue": {
+          "file": "vue/src/components/Countdown.vue",
+          "start": 1,
+          "end": 10,
+          "code": "<script setup lang=\"ts\">\nimport { computed } from 'vue';\nimport { daysUntilChristmas } from '../date';\nconst props = defineProps<{ date: Date }>();\nconst days = computed(() => daysUntilChristmas(props.date));\n</script>\n\n<template>\n  <div class=\"countdown\"><span aria-hidden=\"true\">\u2727</span><span v-if=\"days === 0\">Merry Christmas!</span><span v-else><strong>{{ days }}</strong> {{ days === 1 ? 'day' : 'days' }} until Christmas</span></div>\n</template>",
+          "explanation": "A Single-File Component contains TypeScript setup and a template. defineProps declares the date input."
+        },
+        "angular": {
+          "file": "angular/src/components/countdown.ts",
+          "start": 4,
+          "end": 14,
+          "code": "@Component({\n  selector: 'app-countdown', standalone: true,\n  template: `<div class=\"countdown\"><span aria-hidden=\"true\">\u2727</span>\n    @if (days() === 0) {<span>Merry Christmas!</span>}\n    @else {<span><strong>{{ days() }}</strong> {{ days() === 1 ? 'day' : 'days' }} until Christmas</span>}\n  </div>`,\n})\nexport class Countdown {\n  date = input.required<Date>();\n  days = computed(() => daysUntilChristmas(this.date()));\n}",
+          "explanation": "@Component declares a standalone component and its template. The class contains its input and derived value."
+        }
+      }
+    },
+    {
+      "id": "communication",
+      "title": "Parent \u2192 child \u2192 parent",
+      "summary": "Values go down; a day number comes back up.",
+      "examples": {
+        "react": {
+          "file": "react/src/components/Calendar.tsx",
+          "start": 4,
+          "end": 10,
+          "code": "type Props = { movies: Movie[]; availableDay: number; today: number | null; openedDays: number[]; openDay: number | null; onToggle: (day: number) => void };\n\nexport function Calendar({ movies, availableDay, today, openedDays, openDay, onToggle }: Props) {\n  return <div className=\"calendar-grid\">{movies.map(movie => (\n    <CalendarDoor key={movie.day} movie={movie} locked={movie.day > availableDay}\n      opened={openedDays.includes(movie.day)} isOpen={openDay === movie.day}\n      isToday={today === movie.day} onToggle={onToggle}/>",
+          "explanation": "Props contain both values and an onToggle function. Calendar passes that same function to each door."
+        },
+        "vue": {
+          "file": "vue/src/components/Calendar.vue",
+          "start": 5,
+          "end": 13,
+          "code": "defineProps<{ movies: Movie[]; availableDay: number; today: number | null; openedDays: number[]; openDay: number | null }>();\nconst emit = defineEmits<{ toggle: [day: number] }>();\n</script>\n\n<template>\n  <div class=\"calendar-grid\">\n    <CalendarDoor v-for=\"movie in movies\" :key=\"movie.day\" :movie=\"movie\"\n      :locked=\"movie.day > availableDay\" :opened=\"openedDays.includes(movie.day)\"\n      :is-open=\"openDay === movie.day\" :is-today=\"today === movie.day\" @toggle=\"emit('toggle', $event)\"/>",
+          "explanation": "defineProps types the incoming data; defineEmits types the outgoing toggle event. Calendar explicitly re-emits the child event."
+        },
+        "angular": {
+          "file": "angular/src/components/calendar.ts",
+          "start": 15,
+          "end": 22,
+          "code": "export class Calendar {\n  movies = input.required<Movie[]>();\n  availableDay = input.required<number>();\n  today = input.required<number | null>();\n  openedDays = input.required<number[]>();\n  openDay = input.required<number | null>();\n  toggle = output<number>();\n}",
+          "explanation": "input.required declares incoming values and output<number> declares the outgoing day. The template forwards child events."
+        }
+      }
+    },
+    {
+      "id": "one-door",
+      "title": "Only one open door",
+      "summary": "Store one day number, not an open flag on every movie.",
+      "examples": {
+        "react": {
+          "file": "react/src/App.tsx",
+          "start": 58,
+          "end": 62,
+          "code": "  function toggleDoor(day: number) {\n    if (day > availableDay) return;\n    setOpenDay(current => current === day ? null : day);\n    setOpenedDays(current => current.includes(day) ? current : [...current, day]);\n  }",
+          "explanation": "The setter replaces the current day, or clears it when clicked again. openedDays is a separate history array."
+        },
+        "vue": {
+          "file": "vue/src/App.vue",
+          "start": 44,
+          "end": 48,
+          "code": "function toggleDoor(day: number) {\n  if (day > availableDay.value) return;\n  openDay.value = openDay.value === day ? null : day;\n  if (!openedDays.value.includes(day)) openedDays.value = [...openedDays.value, day];\n}",
+          "explanation": "The ref receives one day number or null. Previously opened days are added to a separate array without duplicates."
+        },
+        "angular": {
+          "file": "angular/src/app.ts",
+          "start": 60,
+          "end": 64,
+          "code": "  toggleDoor(day: number) {\n    if (day > this.availableDay()) return;\n    this.openDay.update(current => current === day ? null : day);\n    this.openedDays.update(current => current.includes(day) ? current : [...current, day]);\n  }",
+          "explanation": "The signal update uses the same conditional expression as React. History is updated separately from the visible door."
+        }
+      }
+    },
+    {
+      "id": "forms",
+      "title": "Editing movie titles",
+      "summary": "A local draft protects the saved movie list until Save.",
+      "examples": {
+        "react": {
+          "file": "react/src/components/MovieEditor.tsx",
+          "start": 24,
+          "end": 28,
+          "code": "    <div className=\"editor-grid\">{draft.map(movie => <label key={movie.day}>\n      <span>December {movie.day}</span>\n      <input type=\"text\" required maxLength={120} value={movie.title}\n        onChange={event => setDraft(current => current.map(item => item.day === movie.day ? { ...item, title: event.target.value } : item))}/>\n    </label>)}</div>",
+          "explanation": "The controlled input reads movie.title. onChange maps to a new draft array and replaces just the edited movie object."
+        },
+        "vue": {
+          "file": "vue/src/components/MovieEditor.vue",
+          "start": 23,
+          "end": 25,
+          "code": "    <div class=\"editor-grid\">\n      <label v-for=\"movie in draft\" :key=\"movie.day\"><span>December {{ movie.day }}</span><input v-model=\"movie.title\" type=\"text\" required maxlength=\"120\"/></label>\n    </div>",
+          "explanation": "v-model updates the title on the reactive draft object. This makes the input binding shorter in this implementation."
+        },
+        "angular": {
+          "file": "angular/src/components/movie-editor.ts",
+          "start": 10,
+          "end": 14,
+          "code": "      @for (movie of draft(); track movie.day) {\n        <label><span>December {{ movie.day }}</span>\n          <input #titleInput type=\"text\" required maxlength=\"120\" [value]=\"movie.title\" (input)=\"updateTitle(movie.day, titleInput.value)\"/>\n        </label>\n      }",
+          "explanation": "[value] reads the draft title; (input) calls updateTitle using a template reference. This app uses manual bindings, not Angular Forms."
+        }
+      }
+    },
+    {
+      "id": "storage",
+      "title": "Remembering opened days",
+      "summary": "Persist history while leaving the current open door temporary.",
+      "examples": {
+        "react": {
+          "file": "react/src/App.tsx",
+          "start": 31,
+          "end": 38,
+          "code": "  useEffect(() => {\n    try {\n      localStorage.setItem(storageKey(year), JSON.stringify(openedDays));\n      setStorageFailed(false);\n    } catch {\n      setStorageFailed(true);\n    }\n  }, [openedDays, year]);",
+          "explanation": "useEffect saves history when openedDays or year changes. Its dependency array is explicit."
+        },
+        "vue": {
+          "file": "vue/src/App.vue",
+          "start": 35,
+          "end": 42,
+          "code": "watch(openedDays, days => {\n  try {\n    localStorage.setItem(storageKey(year.value), JSON.stringify(days));\n    storageFailed.value = false;\n  } catch {\n    storageFailed.value = true;\n  }\n}, { immediate: true });",
+          "explanation": "watch observes openedDays and also runs immediately. The toggle handler replaces the array, so this watcher does not need deep mode."
+        },
+        "angular": {
+          "file": "angular/src/app.ts",
+          "start": 34,
+          "end": 42,
+          "code": "  constructor() {\n    effect(() => {\n      const days = this.openedDays();\n      const year = this.year();\n      try {\n        localStorage.setItem(storageKey(year), JSON.stringify(days));\n        this.storageFailed.set(false);\n      } catch { this.storageFailed.set(true); }\n    });",
+          "explanation": "effect reads history and year signals, establishing its dependencies. All three use the same JSON and localStorage format."
+        }
+      }
+    },
+    {
+      "id": "dates",
+      "title": "Date locking",
+      "summary": "This business rule is ordinary TypeScript in all three apps.",
+      "examples": {
+        "react": {
+          "file": "react/src/date.ts",
+          "start": 12,
+          "end": 14,
+          "code": "export function getAvailableDay(date: Date): number {\n  return date.getMonth() === 11 ? Math.min(date.getDate(), 24) : 0;\n}",
+          "explanation": "December is month 11 in JavaScript. Unlock through today, capped at 24; other months return zero."
+        },
+        "vue": {
+          "file": "vue/src/date.ts",
+          "start": 15,
+          "end": 17,
+          "code": "export function getAvailableDay(date: Date): number {\n  return date.getMonth() === 11 ? Math.min(date.getDate(), 24) : 0;\n}",
+          "explanation": "The same rule is copied into Vue. Available-day state is derived from the current or simulated date."
+        },
+        "angular": {
+          "file": "angular/src/date.ts",
+          "start": 16,
+          "end": 18,
+          "code": "export function getAvailableDay(date: Date): number {\n  return date.getMonth() === 11 ? Math.min(date.getDate(), 24) : 0;\n}",
+          "explanation": "The exact same calculation appears in Angular. A computed signal exposes the result to the template."
+        }
+      }
+    },
+    {
+      "id": "countdown",
+      "title": "Countdown & derived values",
+      "summary": "The calculation is shared; the way it is connected to the UI differs.",
+      "examples": {
+        "react": {
+          "file": "react/src/components/Countdown.tsx",
+          "start": 3,
+          "end": 7,
+          "code": "export function Countdown({ date }: { date: Date }) {\n  const days = daysUntilChristmas(date);\n  return <div className=\"countdown\"><span aria-hidden=\"true\">\u2727</span>{days === 0\n    ? <span>Merry Christmas!</span>\n    : <span><strong>{days}</strong> {days === 1 ? 'day' : 'days'} until Christmas</span>}</div>;",
+          "explanation": "React calls daysUntilChristmas during rendering. There is no useMemo for this small calculation."
+        },
+        "vue": {
+          "file": "vue/src/components/Countdown.vue",
+          "start": 2,
+          "end": 5,
+          "code": "import { computed } from 'vue';\nimport { daysUntilChristmas } from '../date';\nconst props = defineProps<{ date: Date }>();\nconst days = computed(() => daysUntilChristmas(props.date));",
+          "explanation": "computed derives the number of days from the date prop. The template reads days without .value."
+        },
+        "angular": {
+          "file": "angular/src/components/countdown.ts",
+          "start": 11,
+          "end": 14,
+          "code": "export class Countdown {\n  date = input.required<Date>();\n  days = computed(() => daysUntilChristmas(this.date()));\n}",
+          "explanation": "computed derives days from the date input signal. The template reads the result as days()."
+        }
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "id": "react",
+      "version": "19.3.0",
+      "typescript": "5.9.3",
+      "files": 9,
+      "lines": 262,
+      "componentLines": 172,
+      "dependencies": 2,
+      "devDependencies": 4,
+      "fileList": [
+        "react/src/App.tsx",
+        "react/src/components/Calendar.tsx",
+        "react/src/components/CalendarDoor.tsx",
+        "react/src/components/Countdown.tsx",
+        "react/src/components/MovieEditor.tsx",
+        "react/src/date.ts",
+        "react/src/main.tsx",
+        "react/src/movies.ts",
+        "react/src/storage.ts"
+      ]
+    },
+    {
+      "id": "vue",
+      "version": "3.5.43",
+      "typescript": "5.9.3",
+      "files": 9,
+      "lines": 269,
+      "componentLines": 178,
+      "dependencies": 1,
+      "devDependencies": 4,
+      "fileList": [
+        "vue/src/App.vue",
+        "vue/src/components/Calendar.vue",
+        "vue/src/components/CalendarDoor.vue",
+        "vue/src/components/Countdown.vue",
+        "vue/src/components/MovieEditor.vue",
+        "vue/src/date.ts",
+        "vue/src/main.ts",
+        "vue/src/movies.ts",
+        "vue/src/storage.ts"
+      ]
+    },
+    {
+      "id": "angular",
+      "version": "21.2.24",
+      "typescript": "5.9.3",
+      "files": 10,
+      "lines": 314,
+      "componentLines": 223,
+      "dependencies": 6,
+      "devDependencies": 4,
+      "fileList": [
+        "angular/src/app.html",
+        "angular/src/app.ts",
+        "angular/src/components/calendar-door.ts",
+        "angular/src/components/calendar.ts",
+        "angular/src/components/countdown.ts",
+        "angular/src/components/movie-editor.ts",
+        "angular/src/date.ts",
+        "angular/src/main.ts",
+        "angular/src/movies.ts",
+        "angular/src/storage.ts"
+      ]
+    }
+  ],
+  "shared": {
+    "movies.ts": true,
+    "storage.ts": true,
+    "styles.css": true
+  }
+}

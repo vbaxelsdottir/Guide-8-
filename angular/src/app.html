@@ -1,0 +1,23 @@
+<main>
+  <header class="masthead"><span class="brand"><span aria-hidden="true">✳</span> THE CHRISTMAS COLLECTION</span><span class="edition">DECEMBER · {{ year() }}</span></header>
+  <section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">24 DOORS. 24 MOVIE NIGHTS.</p>
+    <h1 id="page-title">A very merry<br/><em>movie countdown.</em></h1>
+    <p class="intro-copy">Get cozy. Pick a door. Let a little Christmas magic in.</p>
+    <app-countdown [date]="date()"/>
+  </section>
+  <section class="calendar-section" aria-label="Christmas movie advent calendar">
+    <div class="calendar-heading"><div><h2>Your advent calendar</h2><p>One surprise a day, December 1–24.</p></div><div class="legend"><span><i class="available-dot"></i> Available</span><span>✓ Opened</span><span><i class="lock"></i> Locked</span></div></div>
+    <div class="movie-settings">
+      <p>{{ canEdit() ? 'Make it your own: choose your movies before December 1.' : 'The movie list is set. Editing is closed during December.' }}</p>
+      @if (canEdit() && !editing()) {<button class="secondary-button" (click)="startEditing()">Edit movies</button>}
+    </div>
+    @if (editing() && canEdit()) {<app-movie-editor [movies]="movies()" [saveError]="saveError()" (save)="saveMovies($event)" (cancel)="editing.set(false)"/>}
+    @if (movieMessage()) {<p role="status">{{ movieMessage() }}</p>}
+    <app-calendar [movies]="movies()" [availableDay]="availableDay()" [today]="today()" [openDay]="visibleDay()" [openedDays]="openedDays()" (toggle)="toggleDoor($event)"/>
+    <div class="calendar-foot"><span>{{ openedDays().length }} of 24 surprises discovered</span><span>Good films. Warm blankets. Christmas together.</span></div>
+    @if (storageFailed()) {<p role="status">Your browser couldn’t save opened days. You can still use the calendar.</p>}
+  </section>
+  <footer><span aria-hidden="true">✧</span> A little tradition. A lot of Christmas.</footer>
+  @if (isSimulated) {<p class="development-note">Development preview · {{ previewDate() }} · Change DEVELOPMENT_MODE in src/date.ts to test editing or use today.</p>}
+</main>
